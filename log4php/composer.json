@@ -1,0 +1,22 @@
+{
+    "name": "rurri/log4php-graylog2",
+    "description": "Log4Php to Graylog2 Connector",
+    "type": "library",
+    "keywords": [
+        "log4php",
+        "graylog2"
+    ],
+    "homepage": "http://github.com/rurri/log4php-graylog2",
+    "license": "MIT",
+    "require": {
+        "php": ">=5.3.*",
+        "apache/log4php": "2.*"
+    },
+    "autoload": {
+        "psr-0": {
+            "LoggerAppenderGraylog2":"log4php/appenders/",
+            "LoggerAppenderAMQP":"log4php/appenders/",
+            "LoggerLayoutGelf":"log4php/layouts/"
+        }
+    }
+}
