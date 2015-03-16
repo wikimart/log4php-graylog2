@@ -23,12 +23,12 @@ For composer users
 <pre>
     {
         "require": {
-            "dulyanov/log4php-graylog2": ">=1.0.0"
+            "wikimart/log4php-graylog2": ">=1.0.0"
         },
         "repositories": [
             {
-                "type": "vcs",
-                "url": "https://github.com/d-ulyanov/log4php-graylog2.git"
+                "type": "git",
+                "url": "git://github.com/wikimart/log4php-graylog2.git"
             }
         ]
     }
