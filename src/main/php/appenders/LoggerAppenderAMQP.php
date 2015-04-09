@@ -144,12 +144,12 @@ class LoggerAppenderAMQP extends LoggerAppender
     /**
      * @var AMQPConnection
      */
-    protected $AMQPConnection;
+    protected static $AMQPConnection;
 
     /**
      * @var AMQPExchange
      */
-    protected $AMQPExchange;
+    protected static $AMQPExchange;
 
     /**
      * Stashed logs
@@ -179,46 +179,6 @@ class LoggerAppenderAMQP extends LoggerAppender
             $this->stashLog($message);
         } else {
             $this->sendLogToAMQP($message);
-        }
-    }
-
-    /**
-     * Setup AMQP connection.
-     * Based on defined options, this method connects to the AMQP
-     * and creates a {@link $AMQPConnection} and {@link $AMQPExchange}.
-     */
-    public function activateOptions() {
-        try {
-            $connection = $this->createAMQPConnection(
-                $this->getHost(),
-                $this->getPort(),
-                $this->getVhost(),
-                $this->getLogin(),
-                $this->getPassword(),
-                $this->getConnectionTimeout()
-            );
-
-            $this->setAMQPConnection($connection);
-
-            $exchange = $this->createAMQPExchange(
-                $connection,
-                $this->getExchangeName(),
-                $this->getExchangeType()
-            );
-
-            $this->setAMQPExchange($exchange);
-        } catch (AMQPConnectionException $e) {
-            $this->closed = true;
-            $this->warn(sprintf('Failed to connect to amqp server: %s', $e->getMessage()));
-        } catch (AMQPChannelException $e) {
-            $this->closed = true;
-            $this->warn(sprintf('Failed to open amqp channel: %s', $e->getMessage()));
-        } catch (AMQPExchangeException $e) {
-            $this->closed = true;
-            $this->warn(sprintf('Failed to declare amqp exchange: %s', $e->getMessage()));
-        } catch (Exception $e) {
-            $this->closed = true;
-            $this->warn(sprintf('Amqp connection exception: %s', $e->getMessage()));
         }
     }
 
@@ -282,7 +242,7 @@ class LoggerAppenderAMQP extends LoggerAppender
      */
     protected function setAMQPConnection($AMQPConnection)
     {
-        $this->AMQPConnection = $AMQPConnection;
+        self::$AMQPConnection = $AMQPConnection;
     }
 
     /**
@@ -290,7 +250,17 @@ class LoggerAppenderAMQP extends LoggerAppender
      */
     public function getAMQPConnection()
     {
-        return $this->AMQPConnection;
+        if (is_null(self::$AMQPConnection)) {
+            self::$AMQPConnection = $this->createAMQPConnection(
+                $this->getHost(),
+                $this->getPort(),
+                $this->getVhost(),
+                $this->getLogin(),
+                $this->getPassword(),
+                $this->getConnectionTimeout()
+            );
+        }
+        return self::$AMQPConnection;
     }
 
     /**
@@ -298,7 +268,7 @@ class LoggerAppenderAMQP extends LoggerAppender
      */
     protected function setAMQPExchange($AMQPExchange)
     {
-        $this->AMQPExchange = $AMQPExchange;
+        self::$AMQPExchange = $AMQPExchange;
     }
 
     /**
@@ -306,7 +276,28 @@ class LoggerAppenderAMQP extends LoggerAppender
      */
     public function getAMQPExchange()
     {
-        return $this->AMQPExchange;
+        if (is_null(self::$AMQPExchange)) {
+            try {
+                self::$AMQPExchange = $this->createAMQPExchange(
+                    $this->getAMQPConnection(),
+                    $this->getExchangeName(),
+                    $this->getExchangeType()
+                );
+            } catch (AMQPConnectionException $e) {
+                $this->closed = true;
+                $this->warn(sprintf('Failed to connect to amqp server: %s', $e->getMessage()));
+            } catch (AMQPChannelException $e) {
+                $this->closed = true;
+                $this->warn(sprintf('Failed to open amqp channel: %s', $e->getMessage()));
+            } catch (AMQPExchangeException $e) {
+                $this->closed = true;
+                $this->warn(sprintf('Failed to declare amqp exchange: %s', $e->getMessage()));
+            } catch (Exception $e) {
+                $this->closed = true;
+                $this->warn(sprintf('Amqp connection exception: %s', $e->getMessage()));
+            }
+        }
+        return self::$AMQPExchange;
     }
 
     /**
